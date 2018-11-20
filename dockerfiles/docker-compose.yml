@@ -1,0 +1,49 @@
+version: '3'
+services:
+  iu_mysql:
+      image: mysql:5.7
+      environment:
+        MYSQL_ROOT_PASSWORD: 123456
+      ports:
+        - "3306:3306"
+      volumes:
+        - /var/www/html/iu-docker/data/mysql:/var/lib/mysql
+      container_name: iu_mysql
+
+  iu_redis:
+      image: "redis"
+      ports:
+        - "6379:6379"
+      volumes:
+      - /var/www/html/iu-docker/data/redis:/data
+      container_name: iu_redis
+
+  iu_phpfpm:
+       image: php:7.2-fpm
+       ports:
+         - "9000:9000"
+       volumes:
+         - /var/www/html/iu-deployer:/var/www/html/iu-deployer
+       links:
+         - iu_mysql:mysql
+         - iu_redis:redis
+       container_name: iu_phpfpm
+
+  iu_nginx:
+      image: nginx:1.12.2
+      ports:
+        - "80:80"
+      volumes:
+        - /var/www/html/iu-deployer:/var/www/html/iu-deployer
+        - /var/www/html/iu-docker/dockerfiles/nginx:/etc/nginx/conf.d
+      links:
+        - iu_phpfpm:phpfpm
+      container_name: iu_nginx
+
+  iu_adminer:
+      image: adminer
+      ports:
+       - "8080:8080"
+      links:
+       - iu_mysql:db
+      container_name: iu_adminer
